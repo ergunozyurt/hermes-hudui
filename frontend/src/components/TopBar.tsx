@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTheme, THEMES } from '../hooks/useTheme'
 import { useApi } from '../hooks/useApi'
 
@@ -28,9 +28,12 @@ interface TopBarProps {
 export default function TopBar({ activeTab, onTabChange, selectedProfile, onProfileChange, onRefresh }: TopBarProps) {
   const { theme, setTheme, scanlines, setScanlines } = useTheme()
   const [showThemePicker, setShowThemePicker] = useState(false)
+  const [showProfilePicker, setShowProfilePicker] = useState(false)
   const [time, setTime] = useState(new Date())
   const [refreshing, setRefreshing] = useState(false)
   const { data: profilesData } = useApi('/profiles', 60000)
+  const profilePickerRef = useRef<HTMLDivElement | null>(null)
+  const themePickerRef = useRef<HTMLDivElement | null>(null)
 
   const profiles = (profilesData?.profiles || []).map((p: any) => p.name)
 
@@ -43,6 +46,21 @@ export default function TopBar({ activeTab, onTabChange, selectedProfile, onProf
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(t)
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node
+      if (profilePickerRef.current && !profilePickerRef.current.contains(target)) {
+        setShowProfilePicker(false)
+      }
+      if (themePickerRef.current && !themePickerRef.current.contains(target)) {
+        setShowThemePicker(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
   }, [])
 
   // Keyboard shortcuts
@@ -107,28 +125,64 @@ export default function TopBar({ activeTab, onTabChange, selectedProfile, onProf
         ))}
       </div>
 
-      <div className="shrink-0 ml-2 flex items-center gap-1">
-        <span className="text-[13px] hidden sm:inline" style={{ color: 'var(--hud-text-dim)' }}>profile</span>
-        <select
-          value={selectedProfile}
-          onChange={(e) => onProfileChange(e.target.value)}
-          className="px-2 py-1 text-[13px] uppercase"
+      <div className="relative shrink-0 ml-2" ref={profilePickerRef}>
+        <button
+          onClick={() => {
+            setShowProfilePicker(p => !p)
+            setShowThemePicker(false)
+          }}
+          className="px-2 py-1.5 text-[13px] tracking-wider uppercase cursor-pointer flex items-center gap-2"
           style={{
-            background: 'var(--hud-bg-panel)',
-            color: 'var(--hud-primary)',
-            border: '1px solid var(--hud-border)',
-            minHeight: '30px',
+            color: showProfilePicker ? 'var(--hud-primary)' : 'var(--hud-text-dim)',
+            background: showProfilePicker ? 'var(--hud-bg-panel)' : 'transparent',
+            minHeight: '32px',
+            border: showProfilePicker ? '1px solid var(--hud-border)' : '1px solid transparent',
           }}
           title="Select profile scope"
         >
-          {profiles.length === 0 ? (
-            <option value={selectedProfile}>{selectedProfile}</option>
-          ) : (
-            profiles.map((profile: string) => (
-              <option key={profile} value={profile}>{profile}</option>
-            ))
-          )}
-        </select>
+          <span className="hidden sm:inline">profile</span>
+          <span style={{ color: 'var(--hud-primary)' }}>{selectedProfile}</span>
+          <span style={{ color: 'var(--hud-text-dim)' }}>{showProfilePicker ? '▴' : '▾'}</span>
+        </button>
+        {showProfilePicker && (
+          <div
+            className="absolute right-0 top-full mt-1 z-50 py-1 min-w-[180px] max-w-[70vw]"
+            style={{
+              background: 'var(--hud-bg-panel)',
+              border: '1px solid var(--hud-border)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div
+              className="overflow-y-auto"
+              style={{ maxHeight: 'min(60vh, 320px)', WebkitOverflowScrolling: 'touch' as any }}
+            >
+              {(profiles.length === 0 ? [selectedProfile] : profiles).map((profile: string) => {
+                const isActive = profile === selectedProfile
+                return (
+                  <button
+                    key={profile}
+                    onClick={() => {
+                      onProfileChange(profile)
+                      setShowProfilePicker(false)
+                    }}
+                    className="block w-full text-left px-3 py-2 text-[13px] transition-colors cursor-pointer"
+                    style={{
+                      color: isActive ? 'var(--hud-primary)' : 'var(--hud-text)',
+                      background: isActive ? 'var(--hud-bg-hover)' : 'transparent',
+                      minHeight: '36px',
+                    }}
+                  >
+                    <span style={{ color: isActive ? 'var(--hud-primary)' : 'var(--hud-text-dim)' }}>
+                      {isActive ? '◉' : '○'}
+                    </span>
+                    <span className="ml-2 uppercase tracking-wider">{profile}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Refresh button */}
@@ -150,9 +204,12 @@ export default function TopBar({ activeTab, onTabChange, selectedProfile, onProf
       </button>
 
       {/* Theme picker */}
-      <div className="relative shrink-0">
+      <div className="relative shrink-0" ref={themePickerRef}>
         <button
-          onClick={() => setShowThemePicker(p => !p)}
+          onClick={() => {
+            setShowThemePicker(p => !p)
+            setShowProfilePicker(false)
+          }}
           className="px-2 py-1.5 text-[13px] tracking-wider uppercase cursor-pointer"
           style={{ color: 'var(--hud-text-dim)', minHeight: '32px' }}
           title="Theme (t)"
