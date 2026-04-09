@@ -47,18 +47,26 @@ export default function AgentsPanel({ selectedProfile }: { selectedProfile: stri
 
         {/* Live agents */}
         <div className="space-y-2">
-          {live.map((proc: any, i: number) => (
-            <div key={`${proc.name}-${proc.pid}-${i}`} className="p-2" style={{ background: 'var(--hud-bg-panel)', borderLeft: '3px solid var(--hud-success)' }}>
+          {live.map((proc: any, i: number) => {
+            const isGlobal = proc.scope === 'global'
+            const borderColor = isGlobal ? 'var(--hud-text-dim)' : 'var(--hud-success)'
+            const dotColor = isGlobal ? 'var(--hud-text-dim)' : 'var(--hud-success)'
+            return (
+            <div key={`${proc.name}-${proc.pid}-${i}`} className="p-2" style={{ background: 'var(--hud-bg-panel)', borderLeft: `3px solid ${borderColor}` }}>
               <div className="flex items-center gap-2 text-[13px]">
-                <span style={{ color: 'var(--hud-success)' }}>▸</span>
+                <span style={{ color: dotColor }}>▸</span>
                 <span className="font-bold">{proc.name}</span>
-                {proc.profile && (
+                {isGlobal ? (
+                  <span className="text-[13px] px-1.5 py-0.5 uppercase tracking-wider" style={{ background: 'var(--hud-bg-hover)', color: 'var(--hud-text-dim)', fontSize: '10px' }}>
+                    global
+                  </span>
+                ) : proc.profile ? (
                   <span className="text-[13px] px-1.5 py-0.5" style={{ background: 'var(--hud-bg-hover)', color: 'var(--hud-accent)' }}>
                     {profileDisplayName(proc.profile)}
                   </span>
-                )}
+                ) : null}
                 {proc.pid && <span className="text-[13px] tabular-nums" style={{ color: 'var(--hud-text-dim)' }}>[{proc.pid}]</span>}
-                <span className="text-[13px]" style={{ color: 'var(--hud-success)' }}>alive</span>
+                <span className="text-[13px]" style={{ color: dotColor }}>alive</span>
                 {proc.uptime && <span className="text-[13px]" style={{ color: 'var(--hud-text-dim)' }}>up {proc.uptime}</span>}
                 {proc.mem_mb && <span className="text-[13px]" style={{ color: 'var(--hud-text-dim)' }}>{proc.mem_mb} MB</span>}
                 {proc.cwd && <span className="text-[13px] truncate" style={{ color: 'var(--hud-text-dim)' }}>{proc.cwd}</span>}
@@ -70,7 +78,8 @@ export default function AgentsPanel({ selectedProfile }: { selectedProfile: stri
                 </div>
               )}
             </div>
-          ))}
+            )
+          })}
 
           {/* Idle agents */}
           {idle.length > 0 && (

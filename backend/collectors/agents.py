@@ -21,6 +21,7 @@ class AgentProcess:
     name: str           # hermes, claude, codex, opencode, llama-server
     binary: str         # actual binary name for pgrep
     profile: Optional[str] = None
+    scope: str = "profile"   # "profile" | "global"
     running: bool = False
     pid: Optional[int] = None
     uptime: Optional[str] = None      # human-readable
@@ -117,6 +118,12 @@ AGENT_PROCESSES = [
     ("cursor", "cursor"),
     ("windsurf", "windsurf"),
 ]
+
+# These are Hermes-family binaries — they have profiles (default if no --profile flag)
+_HERMES_BINARIES = {"hermes"}
+
+# These are global tools — they don't belong to any Hermes profile
+_GLOBAL_BINARIES = {"claude", "codex", "opencode", "llama-server", "aider", "cursor", "windsurf"}
 
 # Shells — excluded from "interesting" unmatched pane display
 _SHELL_COMMANDS = {"bash", "zsh", "sh", "fish", "dash", "tcsh", "csh"}
@@ -571,6 +578,15 @@ def collect_agents(hermes_dir: str | None = None, profile: str | None = None) ->
                 if agent.pid == os.getppid():
                     continue
 
+            # Classify scope and resolve default profile
+            if binary in _GLOBAL_BINARIES:
+                agent.scope = "global"
+                agent.profile = None
+            else:
+                agent.scope = "profile"
+                if agent.profile is None:
+                    agent.profile = "default"
+
             processes.append(agent)
 
     # tmux discovery
@@ -590,7 +606,11 @@ def collect_agents(hermes_dir: str | None = None, profile: str | None = None) ->
     recent_sessions = _get_recent_sessions(hermes_dir)
 
     if profile:
-        processes = [proc for proc in processes if proc.profile is None or proc.profile == profile]
+        # Global agents always show; profile agents are filtered to match
+        processes = [
+            proc for proc in processes
+            if proc.scope == "global" or proc.profile == profile
+        ]
         allowed_pids = {proc.pid for proc in processes if proc.pid is not None}
         alerts = [
             alert for alert in alerts
