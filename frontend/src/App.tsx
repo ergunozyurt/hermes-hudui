@@ -15,19 +15,19 @@ import AgentsPanel from './components/AgentsPanel'
 import ProfilesPanel from './components/ProfilesPanel'
 import TokenCostsPanel from './components/TokenCostsPanel'
 
-function TabContent({ tab }: { tab: TabId }) {
+function TabContent({ tab, selectedProfile }: { tab: TabId; selectedProfile: string }) {
   switch (tab) {
-    case 'dashboard': return <DashboardPanel />
-    case 'memory': return <MemoryPanel />
-    case 'skills': return <SkillsPanel />
-    case 'sessions': return <SessionsPanel />
-    case 'cron': return <CronPanel />
+    case 'dashboard': return <DashboardPanel selectedProfile={selectedProfile} />
+    case 'memory': return <MemoryPanel selectedProfile={selectedProfile} />
+    case 'skills': return <SkillsPanel selectedProfile={selectedProfile} />
+    case 'sessions': return <SessionsPanel selectedProfile={selectedProfile} />
+    case 'cron': return <CronPanel selectedProfile={selectedProfile} />
     case 'projects': return <ProjectsPanel />
     case 'health': return <HealthPanel />
     case 'agents': return <AgentsPanel />
     case 'profiles': return <ProfilesPanel />
-    case 'token-costs': return <TokenCostsPanel />
-    default: return <DashboardPanel />
+    case 'token-costs': return <TokenCostsPanel selectedProfile={selectedProfile} />
+    default: return <DashboardPanel selectedProfile={selectedProfile} />
   }
 }
 
@@ -47,6 +47,7 @@ const GRID_CLASS: Record<TabId, string> = {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard')
+  const [selectedProfile, setSelectedProfile] = useState(() => localStorage.getItem('hud-selected-profile') || 'default')
   const [booted, setBooted] = useState(() => {
     return sessionStorage.getItem('hud-booted') === 'true'
   })
@@ -70,6 +71,12 @@ export default function App() {
     setActiveTab(id as TabId)
   }, [])
 
+  const handleProfileChange = useCallback((profile: string) => {
+    setSelectedProfile(profile)
+    localStorage.setItem('hud-selected-profile', profile)
+    refreshAll()
+  }, [])
+
   return (
     <ThemeProvider>
       {!booted && <BootScreen onComplete={handleBootComplete} />}
@@ -79,11 +86,11 @@ export default function App() {
         onSelect={handleCommandSelect}
       />
 
-      <TopBar activeTab={activeTab} onTabChange={setActiveTab} onRefresh={refreshAll} />
+      <TopBar activeTab={activeTab} onTabChange={setActiveTab} selectedProfile={selectedProfile} onProfileChange={handleProfileChange} onRefresh={refreshAll} />
 
       <div className="overflow-y-auto" style={{ flex: '1 1 0', height: 0, minHeight: 0 }}>
         <div className={`grid gap-2 p-2 ${GRID_CLASS[activeTab]}`}>
-          <TabContent tab={activeTab} />
+          <TabContent tab={activeTab} selectedProfile={selectedProfile} />
         </div>
       </div>
 

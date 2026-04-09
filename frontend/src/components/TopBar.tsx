@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme, THEMES } from '../hooks/useTheme'
+import { useApi } from '../hooks/useApi'
 
 export const TABS = [
   { id: 'dashboard', label: 'Dashboard', key: '1' },
@@ -19,14 +20,25 @@ export type TabId = typeof TABS[number]['id']
 interface TopBarProps {
   activeTab: TabId
   onTabChange: (tab: TabId) => void
+  selectedProfile: string
+  onProfileChange: (profile: string) => void
   onRefresh?: () => void
 }
 
-export default function TopBar({ activeTab, onTabChange, onRefresh }: TopBarProps) {
+export default function TopBar({ activeTab, onTabChange, selectedProfile, onProfileChange, onRefresh }: TopBarProps) {
   const { theme, setTheme, scanlines, setScanlines } = useTheme()
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [time, setTime] = useState(new Date())
   const [refreshing, setRefreshing] = useState(false)
+  const { data: profilesData } = useApi('/profiles', 60000)
+
+  const profiles = (profilesData?.profiles || []).map((p: any) => p.name)
+
+  useEffect(() => {
+    if (profiles.length > 0 && !profiles.includes(selectedProfile)) {
+      onProfileChange('default')
+    }
+  }, [profilesData, profiles.length, selectedProfile, onProfileChange])
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
@@ -93,6 +105,30 @@ export default function TopBar({ activeTab, onTabChange, onRefresh }: TopBarProp
             {tab.label}
           </button>
         ))}
+      </div>
+
+      <div className="shrink-0 ml-2 flex items-center gap-1">
+        <span className="text-[13px] hidden sm:inline" style={{ color: 'var(--hud-text-dim)' }}>profile</span>
+        <select
+          value={selectedProfile}
+          onChange={(e) => onProfileChange(e.target.value)}
+          className="px-2 py-1 text-[13px] uppercase"
+          style={{
+            background: 'var(--hud-bg-panel)',
+            color: 'var(--hud-primary)',
+            border: '1px solid var(--hud-border)',
+            minHeight: '30px',
+          }}
+          title="Select profile scope"
+        >
+          {profiles.length === 0 ? (
+            <option value={selectedProfile}>{selectedProfile}</option>
+          ) : (
+            profiles.map((profile: string) => (
+              <option key={profile} value={profile}>{profile}</option>
+            ))
+          )}
+        </select>
       </div>
 
       {/* Refresh button */}
