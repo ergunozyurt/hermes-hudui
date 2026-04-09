@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTheme, THEMES } from '../hooks/useTheme'
 import { useApi } from '../hooks/useApi'
+import { profileDisplayName } from '../lib/profile'
 
 export const TABS = [
   { id: 'dashboard', label: 'Dashboard', key: '1' },
@@ -100,31 +101,6 @@ export default function TopBar({ activeTab, onTabChange, selectedProfile, onProf
   return (
     <div className="flex items-center gap-1 px-3 py-1.5 border-b"
          style={{ borderColor: 'var(--hud-border)', background: 'var(--hud-bg-surface)' }}>
-      {/* Logo */}
-      <span className="gradient-text font-bold text-[13px] mr-3 tracking-wider cursor-pointer shrink-0"
-            onClick={() => onTabChange('dashboard')}>☤ HERMES</span>
-
-      {/* Tabs */}
-      <div className="flex gap-0.5 flex-1 overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className="px-2 py-1.5 text-[13px] tracking-widest uppercase transition-all duration-150 shrink-0 cursor-pointer"
-            style={{
-              color: activeTab === tab.id ? 'var(--hud-primary)' : 'var(--hud-text-dim)',
-              background: activeTab === tab.id ? 'var(--hud-bg-panel)' : 'transparent',
-              borderBottom: activeTab === tab.id ? '2px solid var(--hud-primary)' : '2px solid transparent',
-              textShadow: activeTab === tab.id ? '0 0 8px var(--hud-primary-glow)' : 'none',
-              minHeight: '32px',
-            }}
-          >
-            <span className="opacity-40 mr-1">{tab.key}</span>
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
       <div className="relative shrink-0 ml-2" ref={profilePickerRef}>
         <button
           onClick={() => {
@@ -133,20 +109,20 @@ export default function TopBar({ activeTab, onTabChange, selectedProfile, onProf
           }}
           className="px-2 py-1.5 text-[13px] tracking-wider uppercase cursor-pointer flex items-center gap-2"
           style={{
-            color: showProfilePicker ? 'var(--hud-primary)' : 'var(--hud-text-dim)',
+            color: showProfilePicker ? 'var(--hud-primary)' : 'var(--hud-text)',
             background: showProfilePicker ? 'var(--hud-bg-panel)' : 'transparent',
             minHeight: '32px',
             border: showProfilePicker ? '1px solid var(--hud-border)' : '1px solid transparent',
+            textShadow: '0 0 8px var(--hud-primary-glow)',
           }}
           title="Select profile scope"
         >
-          <span className="hidden sm:inline">profile</span>
-          <span style={{ color: 'var(--hud-primary)' }}>{selectedProfile}</span>
+          <span className="gradient-text font-bold tracking-wider">☤ {profileDisplayName(selectedProfile)}</span>
           <span style={{ color: 'var(--hud-text-dim)' }}>{showProfilePicker ? '▴' : '▾'}</span>
         </button>
         {showProfilePicker && (
           <div
-            className="absolute right-0 top-full mt-1 z-50 py-1 min-w-[180px] max-w-[70vw]"
+            className="absolute left-0 top-full mt-1 z-50 py-1 min-w-[200px] max-w-[80vw]"
             style={{
               background: 'var(--hud-bg-panel)',
               border: '1px solid var(--hud-border)',
@@ -176,13 +152,34 @@ export default function TopBar({ activeTab, onTabChange, selectedProfile, onProf
                     <span style={{ color: isActive ? 'var(--hud-primary)' : 'var(--hud-text-dim)' }}>
                       {isActive ? '◉' : '○'}
                     </span>
-                    <span className="ml-2 uppercase tracking-wider">{profile}</span>
+                    <span className="ml-2 uppercase tracking-wider">{profileDisplayName(profile)}</span>
                   </button>
                 )
               })}
             </div>
           </div>
         )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-0.5 flex-1 overflow-x-auto min-w-0" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+        {TABS.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className="px-2 py-1.5 text-[13px] tracking-widest uppercase transition-all duration-150 shrink-0 cursor-pointer"
+            style={{
+              color: activeTab === tab.id ? 'var(--hud-primary)' : 'var(--hud-text-dim)',
+              background: activeTab === tab.id ? 'var(--hud-bg-panel)' : 'transparent',
+              borderBottom: activeTab === tab.id ? '2px solid var(--hud-primary)' : '2px solid transparent',
+              textShadow: activeTab === tab.id ? '0 0 8px var(--hud-primary-glow)' : 'none',
+              minHeight: '32px',
+            }}
+          >
+            <span className="opacity-40 mr-1">{tab.key}</span>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Refresh button */}

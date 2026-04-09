@@ -7,3 +7,7 @@ export function withProfile(path: string, profile?: string | null) {
 export function profileLabel(profile?: string | null) {
   return !profile || profile === 'default' ? 'default' : profile
 }
+
+export function profileDisplayName(profile?: string | null) {
+  return !profile || profile === 'default' ? 'Hermes' : profile
+}
