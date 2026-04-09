@@ -12,7 +12,6 @@ import CronPanel from './components/CronPanel'
 import ProjectsPanel from './components/ProjectsPanel'
 import HealthPanel from './components/HealthPanel'
 import AgentsPanel from './components/AgentsPanel'
-import ProfilesPanel from './components/ProfilesPanel'
 import TokenCostsPanel from './components/TokenCostsPanel'
 
 function TabContent({ tab, selectedProfile }: { tab: TabId; selectedProfile: string }) {
@@ -24,8 +23,7 @@ function TabContent({ tab, selectedProfile }: { tab: TabId; selectedProfile: str
     case 'cron': return <CronPanel selectedProfile={selectedProfile} />
     case 'projects': return <ProjectsPanel />
     case 'health': return <HealthPanel />
-    case 'agents': return <AgentsPanel />
-    case 'profiles': return <ProfilesPanel />
+    case 'agents': return <AgentsPanel selectedProfile={selectedProfile} />
     case 'token-costs': return <TokenCostsPanel selectedProfile={selectedProfile} />
     default: return <DashboardPanel selectedProfile={selectedProfile} />
   }
@@ -41,7 +39,6 @@ const GRID_CLASS: Record<TabId, string> = {
   projects: 'grid-cols-1',
   health: 'grid-cols-1 sm:grid-cols-2',
   agents: 'grid-cols-1 lg:grid-cols-2',
-  profiles: 'grid-cols-1',
   'token-costs': 'grid-cols-1 lg:grid-cols-2',
 }
 
@@ -101,7 +98,7 @@ export default function App() {
         <span className="hidden sm:inline">
           <span className="opacity-40">Ctrl+K</span> palette
           <span className="mx-2">·</span>
-          <span className="opacity-40">1-9</span> tabs
+          <span className="opacity-40">1-8</span> tabs
           <span className="mx-2">·</span>
           <span className="opacity-40">t</span> theme
           <span className="mx-2">·</span>

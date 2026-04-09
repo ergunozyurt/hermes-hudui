@@ -12,7 +12,6 @@ export const TABS = [
   { id: 'projects', label: 'Projects', key: '6' },
   { id: 'health', label: 'Health', key: '7' },
   { id: 'agents', label: 'Agents', key: '8' },
-  { id: 'profiles', label: 'Profiles', key: '9' },
   { id: 'token-costs', label: 'Costs', key: '0' },
 ] as const
 

@@ -1,6 +1,7 @@
 import { useApi } from '../hooks/useApi'
 import Panel from './Panel'
 import { formatDur } from '../lib/utils'
+import { profileDisplayName, withProfile } from '../lib/profile'
 
 const SOURCE_STYLES: Record<string, { color: string; label: string }> = {
   cli: { color: 'var(--hud-success)', label: 'cli' },
@@ -8,8 +9,8 @@ const SOURCE_STYLES: Record<string, { color: string; label: string }> = {
   cron: { color: 'var(--hud-warning)', label: 'cron' },
 }
 
-export default function AgentsPanel() {
-  const { data, isLoading } = useApi('/agents', 15000)
+export default function AgentsPanel({ selectedProfile }: { selectedProfile: string }) {
+  const { data, isLoading } = useApi(withProfile('/agents', selectedProfile), 15000)
 
   if (isLoading || !data) {
     return <Panel title="Agents" className="col-span-full"><div className="glow text-[13px] animate-pulse">Scanning processes...</div></Panel>
@@ -25,7 +26,7 @@ export default function AgentsPanel() {
   return (
     <>
       {/* Live processes */}
-      <Panel title={`Live Agents — ${data.live_count} live, ${idle.length} idle`}>
+      <Panel title={`Live Agents · ${profileDisplayName(data?.profile || selectedProfile)} — ${data.live_count} live, ${idle.length} idle`}>
         {/* Operator alerts */}
         {alerts.length > 0 && (
           <div className="mb-3">
@@ -51,6 +52,11 @@ export default function AgentsPanel() {
               <div className="flex items-center gap-2 text-[13px]">
                 <span style={{ color: 'var(--hud-success)' }}>▸</span>
                 <span className="font-bold">{proc.name}</span>
+                {proc.profile && (
+                  <span className="text-[13px] px-1.5 py-0.5" style={{ background: 'var(--hud-bg-hover)', color: 'var(--hud-accent)' }}>
+                    {profileDisplayName(proc.profile)}
+                  </span>
+                )}
                 {proc.pid && <span className="text-[13px] tabular-nums" style={{ color: 'var(--hud-text-dim)' }}>[{proc.pid}]</span>}
                 <span className="text-[13px]" style={{ color: 'var(--hud-success)' }}>alive</span>
                 {proc.uptime && <span className="text-[13px]" style={{ color: 'var(--hud-text-dim)' }}>up {proc.uptime}</span>}
@@ -97,7 +103,7 @@ export default function AgentsPanel() {
       </Panel>
 
       {/* Recent sessions */}
-      <Panel title={`Recent Activity — last ${recentSessions.length} sessions`}>
+      <Panel title={`Recent Activity · ${profileDisplayName(data?.profile || selectedProfile)} — last ${recentSessions.length} sessions`}>
         <div className="space-y-0.5">
           {recentSessions.map((sess: any, i: number) => {
             const style = SOURCE_STYLES[sess.source] || { color: 'var(--hud-text-dim)', label: sess.source }
